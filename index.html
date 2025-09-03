@@ -1,27 +1,83 @@
-body { 
-  font-family: Arial, sans-serif; 
-  font-size: 22px;         /* bigger base font */
-  line-height: 1.8; 
-  margin: 10px; 
-  text-align: center;      /* center align everything */
-}
-h3 { 
-  margin: 10px 0 5px; 
-  font-size: 24px;         /* larger headers */
-}
-pre { 
-  display: inline-block;   /* keep them centered */
-  min-width: 250px;
-  margin: 0 0 12px; 
-  background: #f8f8f8; 
-  padding: 10px 16px; 
-  border: 1px solid #ccc; 
-  border-radius: 4px; 
-  font-size: 20px;         /* large monospace font */
-  font-family: "Courier New", monospace;
-  text-align: center; 
-}
-strong { font-size: 22px; }
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>DNS Results</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      font-size: 22px;          /* bigger base font */
+      line-height: 1.6; 
+      margin: 10px; 
+      text-align: center;       /* center align everything */
+    }
+    h3 { 
+      margin: 10px 0 6px; 
+      font-size: 24px;          /* larger section headers */
+    }
+    pre { 
+      display: inline-block;    /* center the record blocks */
+      min-width: 250px;
+      margin: 0 0 14px; 
+      background: #f8f8f8; 
+      padding: 10px 16px; 
+      border: 1px solid #ccc; 
+      border-radius: 6px; 
+      font-size: 20px;          /* large monospace text */
+      font-family: "Courier New", monospace;
+      text-align: center; 
+    }
+    p { margin: 6px 0; }
+    strong { font-size: 22px; }
+  </style>
+</head>
+<body>
+  <p><strong>Domain:</strong> <span id="rootLabel"></span></p>
+
+  <h3>Root A Record</h3>
+  <pre id="rootA">Loading…</pre>
+
+  <h3>www CNAME Record</h3>
+  <pre id="wwwCNAME">Loading…</pre>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const rawInput = params.get("domain") || "";
+
+    function normalizeDomain(s) {
+      return (s || "")
+        .trim()
+        .replace(/^https?:\/\//i, "")
+        .replace(/[#?].*$/, "")
+        .replace(/\/.*$/, "")
+        .replace(/^www\./i, "");
+    }
+
+    const root = normalizeDomain(rawInput);
+    const www = root ? `www.${root}` : "";
+    document.getElementById("rootLabel").textContent = root || "(none)";
+
+    if (root) {
+      showA(root, "rootA");
+      showCNAME(www, "wwwCNAME");
+    } else {
+      document.getElementById("rootA").textContent = "No domain provided.";
+      document.getElementById("wwwCNAME").textContent = "No domain provided.";
+    }
+
+    async function doh(name, type) {
+      const url = `https://dns.google/resolve?name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    }
+
+    async function showA(name, id) {
+      const el = document.getElementById(id);
+      try {
+        const json = await doh(name, "A");
+        const answers = (json.Answer || []).filter(r => r.type === 1).map(r => r.data);
+        el.textContent = answers.length ? answers.join("\n") : "None found";
       } catch (e) {
         el.textContent = `Error: ${e.message || e}`;
       }
@@ -37,11 +93,6 @@ strong { font-size: 22px; }
         el.textContent = `Error: ${e.message || e}`;
       }
     }
-  </script>
-</body>
-</html>
-</html>
-</html>
   </script>
 </body>
 </html>
