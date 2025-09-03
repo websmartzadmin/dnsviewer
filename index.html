@@ -6,29 +6,31 @@
   <style>
     body { 
       font-family: Arial, sans-serif; 
-      font-size: 22px;          /* bigger base font */
-      line-height: 1.6; 
+      font-size: 32px;          /* very large base font */
+      line-height: 1.8; 
       margin: 10px; 
       text-align: center;       /* center align everything */
     }
     h3 { 
-      margin: 10px 0 6px; 
-      font-size: 24px;          /* larger section headers */
+      margin: 14px 0 8px; 
+      font-size: 36px;          /* very large section headers */
+      font-weight: bold;
     }
     pre { 
       display: inline-block;    /* center the record blocks */
-      min-width: 250px;
-      margin: 0 0 14px; 
+      min-width: 320px;
+      margin: 0 0 18px; 
       background: #f8f8f8; 
-      padding: 10px 16px; 
-      border: 1px solid #ccc; 
-      border-radius: 6px; 
-      font-size: 20px;          /* large monospace text */
+      padding: 14px 20px; 
+      border: 2px solid #888; 
+      border-radius: 8px; 
+      font-size: 30px;          /* very large monospace text */
       font-family: "Courier New", monospace;
       text-align: center; 
+      font-weight: bold;
     }
-    p { margin: 6px 0; }
-    strong { font-size: 22px; }
+    p { margin: 8px 0; }
+    strong { font-size: 32px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -74,6 +76,28 @@
 
     async function showA(name, id) {
       const el = document.getElementById(id);
+      try {
+        const json = await doh(name, "A");
+        const answers = (json.Answer || []).filter(r => r.type === 1).map(r => r.data);
+        el.textContent = answers.length ? answers.join("\n") : "None found";
+      } catch (e) {
+        el.textContent = `Error: ${e.message || e}`;
+      }
+    }
+
+    async function showCNAME(name, id) {
+      const el = document.getElementById(id);
+      try {
+        const json = await doh(name, "CNAME");
+        const answers = (json.Answer || []).filter(r => r.type === 5).map(r => r.data);
+        el.textContent = answers.length ? answers.join("\n") : "None found";
+      } catch (e) {
+        el.textContent = `Error: ${e.message || e}`;
+      }
+    }
+  </script>
+</body>
+</html>
       try {
         const json = await doh(name, "A");
         const answers = (json.Answer || []).filter(r => r.type === 1).map(r => r.data);
