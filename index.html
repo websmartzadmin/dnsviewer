@@ -3,34 +3,36 @@
 <head>
   <meta charset="utf-8" />
   <title>DNS Results</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      font-size: 32px;          /* very large base font */
-      line-height: 1.8; 
-      margin: 10px; 
-      text-align: center;       /* center align everything */
+    body{
+      font-family: Arial, sans-serif;
+      font-size: 34px;          /* bigger base font */
+      line-height: 1.8;
+      margin: 10px;
+      text-align: center;
     }
-    h3 { 
-      margin: 14px 0 8px; 
-      font-size: 36px;          /* very large section headers */
-      font-weight: bold;
+    h3{
+      margin: 14px 0 10px;
+      font-size: 38px;          /* bigger headings */
+      font-weight: 800;
     }
-    pre { 
-      display: inline-block;    /* center the record blocks */
-      min-width: 320px;
-      margin: 0 0 18px; 
-      background: #f8f8f8; 
-      padding: 14px 20px; 
-      border: 2px solid #888; 
-      border-radius: 8px; 
-      font-size: 30px;          /* very large monospace text */
-      font-family: "Courier New", monospace;
-      text-align: center; 
-      font-weight: bold;
+    pre{
+      display: inline-block;
+      min-width: 360px;
+      margin: 0 0 18px;
+      background: #f8f8f8;
+      padding: 14px 22px;
+      border: 2px solid #888;
+      border-radius: 10px;
+      font-size: 32px;          /* large monospace result */
+      font-family: "Courier New", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 1px;
     }
-    p { margin: 8px 0; }
-    strong { font-size: 32px; font-weight: bold; }
+    p{ margin: 8px 0; }
+    strong{ font-size: 34px; font-weight: 800; }
   </style>
 </head>
 <body>
@@ -42,81 +44,62 @@
   <h3>www CNAME Record</h3>
   <pre id="wwwCNAME">Loading…</pre>
 
+  <!-- Keep this script exactly as-is and OUTSIDE of any <pre> or <p> tags -->
   <script>
-    const params = new URLSearchParams(location.search);
-    const rawInput = params.get("domain") || "";
-
-    function normalizeDomain(s) {
-      return (s || "")
-        .trim()
-        .replace(/^https?:\/\//i, "")
-        .replace(/[#?].*$/, "")
-        .replace(/\/.*$/, "")
-        .replace(/^www\./i, "");
-    }
-
-    const root = normalizeDomain(rawInput);
-    const www = root ? `www.${root}` : "";
-    document.getElementById("rootLabel").textContent = root || "(none)";
-
-    if (root) {
-      showA(root, "rootA");
-      showCNAME(www, "wwwCNAME");
-    } else {
-      document.getElementById("rootA").textContent = "No domain provided.";
-      document.getElementById("wwwCNAME").textContent = "No domain provided.";
-    }
-
-    async function doh(name, type) {
-      const url = `https://dns.google/resolve?name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    }
-
-    async function showA(name, id) {
-      const el = document.getElementById(id);
-      try {
-        const json = await doh(name, "A");
-        const answers = (json.Answer || []).filter(r => r.type === 1).map(r => r.data);
-        el.textContent = answers.length ? answers.join("\n") : "None found";
-      } catch (e) {
-        el.textContent = `Error: ${e.message || e}`;
+    (function(){
+      function normalizeDomain(s){
+        if(!s) return "";
+        s = s.trim();
+        s = s.replace(/^https?:\/\//i, "");
+        s = s.replace(/[#?].*$/, "");
+        s = s.replace(/\/.*$/, "");
+        s = s.replace(/^www\./i, "");
+        return s;
       }
-    }
 
-    async function showCNAME(name, id) {
-      const el = document.getElementById(id);
-      try {
-        const json = await doh(name, "CNAME");
-        const answers = (json.Answer || []).filter(r => r.type === 5).map(r => r.data);
-        el.textContent = answers.length ? answers.join("\n") : "None found";
-      } catch (e) {
-        el.textContent = `Error: ${e.message || e}`;
+      function doh(name, type){
+        var url = "https://dns.google/resolve?name=" + encodeURIComponent(name) + "&type=" + encodeURIComponent(type);
+        return fetch(url).then(function(res){
+          if(!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        });
       }
-    }
-  </script>
-</body>
-</html>
-      try {
-        const json = await doh(name, "A");
-        const answers = (json.Answer || []).filter(r => r.type === 1).map(r => r.data);
-        el.textContent = answers.length ? answers.join("\n") : "None found";
-      } catch (e) {
-        el.textContent = `Error: ${e.message || e}`;
-      }
-    }
 
-    async function showCNAME(name, id) {
-      const el = document.getElementById(id);
-      try {
-        const json = await doh(name, "CNAME");
-        const answers = (json.Answer || []).filter(r => r.type === 5).map(r => r.data);
-        el.textContent = answers.length ? answers.join("\n") : "None found";
-      } catch (e) {
-        el.textContent = `Error: ${e.message || e}`;
+      function showA(name, id){
+        var el = document.getElementById(id);
+        doh(name, "A").then(function(json){
+          var answers = (json.Answer || []).filter(function(r){ return r.type === 1; }).map(function(r){ return r.data; });
+          el.textContent = answers.length ? answers.join("\n") : "None found";
+        }).catch(function(e){
+          el.textContent = "Error: " + (e && e.message ? e.message : e);
+        });
       }
-    }
+
+      function showCNAME(name, id){
+        var el = document.getElementById(id);
+        doh(name, "CNAME").then(function(json){
+          var answers = (json.Answer || []).filter(function(r){ return r.type === 5; }).map(function(r){ return r.data; });
+          el.textContent = answers.length ? answers.join("\n") : "None found";
+        }).catch(function(e){
+          el.textContent = "Error: " + (e && e.message ? e.message : e);
+        });
+      }
+
+      var params = new URLSearchParams(location.search);
+      var rawInput = params.get("domain") || "";
+      var root = normalizeDomain(rawInput);
+      var www  = root ? "www." + root : "";
+
+      document.getElementById("rootLabel").textContent = root || "(none)";
+
+      if(root){
+        showA(root, "rootA");
+        showCNAME(www, "wwwCNAME");
+      }else{
+        document.getElementById("rootA").textContent = "No domain provided.";
+        document.getElementById("wwwCNAME").textContent = "No domain provided.";
+      }
+    })();
   </script>
 </body>
 </html>
