@@ -2,71 +2,48 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>DNS Lookup</title>
+  <title>DNS Check</title>
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.35; padding: 12px; }
-    h2 { margin: 0 0 4px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
-    .muted { color: #666; font-size: 12px; }
-    pre { margin: 8px 0 0; white-space: pre-wrap; word-break: break-word; }
+    body { font-family: Arial, sans-serif; line-height: 1.5; padding: 20px; }
+    h2 { margin: 0 0 8px; }
+    pre { background: #f8f8f8; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    .muted { color: #666; font-size: 12px; margin-top: 4px; }
   </style>
 </head>
 <body>
   <h2>DNS Records</h2>
-  <div class="muted">Source: Google DNS-over-HTTPS</div>
+  <p><strong>Domain:</strong> <span id="rootLabel"></span></p>
 
-  <p><strong>Input:</strong> <span id="inputLabel"></span></p>
-  <p><strong>Normalized root:</strong> <span id="rootLabel"></span></p>
+  <h3>Root A Record</h3>
+  <pre id="rootA">Loading…</pre>
 
-  <div class="grid">
-    <div class="card">
-      <h3>Root A</h3>
-      <pre id="rootA">Loading…</pre>
-      <div class="muted" id="rootAExtra"></div>
-
-      <h3>Root CNAME</h3>
-      <pre id="rootCNAME">Loading…</pre>
-      <div class="muted">Note: Apex/root domains typically cannot be CNAMEs.</div>
-    </div>
-
-    <div class="card">
-      <h3>www A</h3>
-      <pre id="wwwA">Loading…</pre>
-      <div class="muted" id="wwwAExtra"></div>
-
-      <h3>www CNAME</h3>
-      <pre id="wwwCNAME">Loading…</pre>
-    </div>
-  </div>
+  <h3>www CNAME Record</h3>
+  <pre id="wwwCNAME">Loading…</pre>
 
   <script>
     const params = new URLSearchParams(location.search);
-    const rawInput = params.get("domain") || "";  // e.g., example.com or https://example.com
-    document.getElementById("inputLabel").textContent = rawInput || "(none)";
+    const rawInput = params.get("domain") || "";
 
     function normalizeDomain(s) {
       return (s || "")
         .trim()
-        .replace(/^https?:\/\//i, "")   // remove protocol
-        .replace(/[#?].*$/, "")         // strip query/hash
-        .replace(/\/.*$/, "")           // strip any path
-        .replace(/^www\./i, "");        // normalize to root
+        .replace(/^https?:\/\//i, "")
+        .replace(/[#?].*$/, "")
+        .replace(/\/.*$/, "")
+        .replace(/^www\./i, "");
     }
 
     const root = normalizeDomain(rawInput);
-    const www  = root ? `www.${root}` : "";
+    const www = root ? `www.${root}` : "";
+
     document.getElementById("rootLabel").textContent = root || "(none)";
 
-    if (!root) {
-      ["rootA","rootCNAME","wwwA","wwwCNAME"].forEach(id => {
-        document.getElementById(id).textContent = "No domain provided.";
-      });
-    } else {
-      showA(root, "rootA", "rootAExtra");
-      showCNAME(root, "rootCNAME");
-      showA(www,  "wwwA",  "wwwAExtra");
+    if (root) {
+      showA(root, "rootA");
       showCNAME(www, "wwwCNAME");
+    } else {
+      document.getElementById("rootA").textContent = "No domain provided.";
+      document.getElementById("wwwCNAME").textContent = "No domain provided.";
     }
 
     async function doh(name, type) {
@@ -76,20 +53,14 @@
       return res.json();
     }
 
-    async function showA(name, preId, extraId) {
+    async function showA(name, preId) {
       const pre = document.getElementById(preId);
-      const extra = document.getElementById(extraId);
       try {
         const json = await doh(name, "A");
-        const answers = json.Answer || [];
-        const aOnly = answers.filter(r => r.type === 1).map(r => r.data);
-        pre.textContent = aOnly.length ? aOnly.join("\n") : "None found";
-
-        const cnameInA = answers.filter(r => r.type === 5).map(r => r.data);
-        extra.textContent = cnameInA.length ? `CNAME detected during A lookup → ${cnameInA.join(", ")}` : "";
+        const answers = (json.Answer || []).filter(r => r.type === 1).map(r => r.data);
+        pre.textContent = answers.length ? answers.join("\n") : "None found";
       } catch (e) {
         pre.textContent = `Error: ${e.message || e}`;
-        extra.textContent = "";
       }
     }
 
@@ -97,9 +68,8 @@
       const pre = document.getElementById(preId);
       try {
         const json = await doh(name, "CNAME");
-        const answers = json.Answer || [];
-        const cname = answers.filter(r => r.type === 5).map(r => r.data);
-        pre.textContent = cname.length ? cname.join("\n") : "None found";
+        const answers = (json.Answer || []).filter(r => r.type === 5).map(r => r.data);
+        pre.textContent = answers.length ? answers.join("\n") : "None found";
       } catch (e) {
         pre.textContent = `Error: ${e.message || e}`;
       }
