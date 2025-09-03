@@ -4,19 +4,36 @@
   <meta charset="utf-8" />
   <title>DNS Results</title>
   <style>
-    body { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.4; margin: 10px; }
-    h3 { margin: 8px 0 4px; font-size: 15px; }
-    pre { margin: 0 0 8px; background: #f8f8f8; padding: 4px; border: 1px solid #ccc; border-radius: 4px; }
-    p { margin: 4px 0; }
+    body { 
+      font-family: Arial, sans-serif; 
+      font-size: 18px;          /* larger base font */
+      line-height: 1.6; 
+      margin: 12px; 
+    }
+    h3 { 
+      margin: 12px 0 6px; 
+      font-size: 20px;          /* larger section headers */
+    }
+    pre { 
+      margin: 0 0 12px; 
+      background: #f8f8f8; 
+      padding: 8px; 
+      border: 1px solid #ccc; 
+      border-radius: 4px; 
+      font-size: 17px;          /* larger monospace text */
+      font-family: "Courier New", monospace;
+    }
+    p { margin: 6px 0; }
+    strong { font-size: 18px; }
   </style>
 </head>
 <body>
   <p><strong>Domain:</strong> <span id="rootLabel"></span></p>
 
-  <h3>Root A</h3>
+  <h3>Root A Record</h3>
   <pre id="rootA">Loading…</pre>
 
-  <h3>www CNAME</h3>
+  <h3>www CNAME Record</h3>
   <pre id="wwwCNAME">Loading…</pre>
 
   <script>
@@ -74,6 +91,7 @@
     }
   </script>
 </body>
+</html>
 </html>
 </html>
   </script>
