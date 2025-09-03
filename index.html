@@ -2,16 +2,15 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>DNS Check</title>
+  <title>DNS Check (v2)</title>
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.5; padding: 20px; }
-    h2 { margin: 0 0 8px; }
     pre { background: #f8f8f8; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-    .muted { color: #666; font-size: 12px; margin-top: 4px; }
+    h2, h3 { margin: 0 0 8px; }
   </style>
 </head>
 <body>
-  <h2>DNS Records</h2>
+  <h2>DNS Check (v2)</h2>
   <p><strong>Domain:</strong> <span id="rootLabel"></span></p>
 
   <h3>Root A Record</h3>
@@ -35,7 +34,6 @@
 
     const root = normalizeDomain(rawInput);
     const www = root ? `www.${root}` : "";
-
     document.getElementById("rootLabel").textContent = root || "(none)";
 
     if (root) {
@@ -53,27 +51,30 @@
       return res.json();
     }
 
-    async function showA(name, preId) {
-      const pre = document.getElementById(preId);
+    async function showA(name, id) {
+      const el = document.getElementById(id);
       try {
         const json = await doh(name, "A");
         const answers = (json.Answer || []).filter(r => r.type === 1).map(r => r.data);
-        pre.textContent = answers.length ? answers.join("\n") : "None found";
+        el.textContent = answers.length ? answers.join("\n") : "None found";
       } catch (e) {
-        pre.textContent = `Error: ${e.message || e}`;
+        el.textContent = `Error: ${e.message || e}`;
       }
     }
 
-    async function showCNAME(name, preId) {
-      const pre = document.getElementById(preId);
+    async function showCNAME(name, id) {
+      const el = document.getElementById(id);
       try {
         const json = await doh(name, "CNAME");
         const answers = (json.Answer || []).filter(r => r.type === 5).map(r => r.data);
-        pre.textContent = answers.length ? answers.join("\n") : "None found";
+        el.textContent = answers.length ? answers.join("\n") : "None found";
       } catch (e) {
-        pre.textContent = `Error: ${e.message || e}`;
+        el.textContent = `Error: ${e.message || e}`;
       }
     }
+  </script>
+</body>
+</html>
   </script>
 </body>
 </html>
